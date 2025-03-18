@@ -1,0 +1,34 @@
+<?php
+
+namespace Tests\Feature;
+
+// use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+use App\Services\SpreadsheetService;
+use Mockery;
+use App\Models\Product;
+
+
+class SpreadSheetServiceTest extends TestCase
+{
+
+  //Sorry for this one , I wanted to add more cases but I was running out of time  :(  
+     public function testLoadDataFromSpreadSheet(){
+        $spreadsheetService = new SpreadsheetService();
+        $mock = Mockery::mock('importer');
+        $mock->shouldReceive('import')
+        ->once()
+        ->andReturn([
+            ['product_code' => '', 'quantity' => null],
+            ['product_code' => 'uniqueCode123', 'quantity' => 1000],
+        ]);
+        $this->app->instance('importer', $mock);
+        $spreadsheetService->processSpreadsheet('file.xlsx');
+        $this->assertDatabaseHas('products', ['code' => 'uniqueCode123', 'quantity' => 1000]);
+        $this->assertDatabaseMissing('products', ['code' => '', 'quantity' => null]);
+        $this->assertCount(1, Product::all());
+
+     }
+
+
+}
